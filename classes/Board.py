@@ -31,11 +31,9 @@ class Board:
             )
 
         self.board[stone.x][stone.y] = stone
-        self.current_player = (
-            self.player_white
-            if self.current_player.stone_color == self.player_black.stone_color
-            else self.player_black
-        )
+
+        toggle_flag = self.current_player.stone_color == self.player_black.stone_color
+        self.current_player = self.player_white if toggle_flag else self.player_black
 
     def check_sliding_win_condition(self, w: List[Stone]) -> bool:
         # check if there are n_win black or white stones in a row.
@@ -52,8 +50,8 @@ class Board:
         # iterate each row.
         for i in range(self.n):
             # iterate via sliding window with the number of n_win stones.
-            for j in range(self.n - self.n_win):
-                w = self.board[i][j : self.n_win]  # sliding window
+            for j in range(self.n - self.n_win + 1):
+                w = self.board[i][j : j + self.n_win]  # sliding window
                 condition = self.check_sliding_win_condition(w)
                 if condition:
                     return True
@@ -64,46 +62,36 @@ class Board:
         # iterate each column.
         for j in range(self.n):
             # iterate via sliding window with the number of n_win stones.
-            for i in range(self.n - self.n_win):
-                w = self.board[i : self.n_win][j]
+            for i in range(self.n - self.n_win + 1):
+                w = [self.board[i + k][j] for k in range(self.n_win)]
                 condition = self.check_sliding_win_condition(w)
                 if condition:
                     return True
 
         return False
 
-    def check_diagonalwise_win_condition(self) -> bool:
-
-        # number of black or white stones on a diagonal
-        n_black_stones = 0
-        n_white_stones = 0
+    def check_diagwise_win_condition(self) -> bool:
 
         # n_win is the number of stones of the same color to win
         # check if there are {n_win} black or white stones in any direction of diagonals
         for j in range(self.n):
-            # keep track of the previous stone's color
-            prev_stone_color = None
 
             # skip if there is less than n_win number of cells to check
             if self.n - j < self.n_win:
                 continue
 
-            for i in range(self.n - j):
-                stone_color = self.board[i][j].player.stone_color
-                if prev_stone_color and prev_stone_color == stone_color:
-                    if prev_stone_color == "B":
-                        n_black_stones += 1
-                    else:
-                        n_white_stones += 1
+            for i in range(self.n - self.n_win + 1):
 
-                    if n_black_stones == self.n_win or n_white_stones == self.n_win:
-                        self.winner = self.current_player
-                        return True
-                else:
-                    n_black_stones = 0
-                    n_white_stones = 0
+                w_diag1 = [self.board[k][k + i] for k in range(self.n_win)]
+                w_diag2 = [self.board[k][self.n - k - j - 1] for k in range(self.n_win)]
 
-                prev_stone_color = stone_color
+                print(" ".join(str(i.x) + str(i.y) for i in w_diag1))
+
+                condition1 = self.check_sliding_win_condition(w_diag1)
+                condition2 = self.check_sliding_win_condition(w_diag2)
+                if condition1 or condition2:
+                    return True
+
         return False
 
     def check_win_condition(self) -> bool:
