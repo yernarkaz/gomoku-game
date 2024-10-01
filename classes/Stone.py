@@ -2,12 +2,18 @@ from .player import Player
 
 
 class Stone:
-    def __init__(self, player: Player, x: int, y: int):
-        self.player = player
+
+    def __init__(
+        self,
+        x: int,
+        y: int,
+        color: str,
+        player: Player,
+    ):
         self.x = x
         self.y = y
+        self.color = color
+        self.player = player
 
     def __str__(self) -> str:
-        return (
-            f"{(self.player.stone_color if self.player else ' ')}:({self.x},{self.y})"
-        )
+        return f"{self.color}"

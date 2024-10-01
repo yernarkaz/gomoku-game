@@ -23,30 +23,39 @@ class Game:
             pass
 
     def run(self) -> None:
-        print("Game is started")
+        print("Game is started, enjoy!")
         print(f"Mode: {self.game_mode}")
+        print("-----------------------")
 
         while True:
             player_input = input(
-                f"Player with {self.board.current_player.stone_color} color "
-                "enter x and y coordinates as the form of <x>,<y>:"
+                f"Please enter x and y coordinates for player with {self.board.current_player.stone_color} color "
+                "stones in the form of <x><space><y>:\n"
             )
 
             try:
-                parsed_input = player_input.split(",")
+                parsed_input = player_input.split(" ")
                 x, y = int(parsed_input[0]), int(parsed_input[1])
 
-                new_stone = Stone(self.board.current_player, x, y)
-                success = self.board.update_board(new_stone)
+                new_stone = Stone(
+                    x,
+                    y,
+                    self.board.current_player.stone_color,
+                    self.board.current_player,
+                )
+                self.board.add_stone(new_stone)
 
-                if not success:
-                    raise ValueError(
-                        f"The current stone at {x},{y} is already set in the board."
+                board_state = self.board.check_win_condition()
+
+                if board_state:
+                    print(
+                        f"Player with {self.board.winner.stone_color} stones won the game."
                     )
-                else:
-                    print()
-                    print(self.board)
-                    print()
+                    exit()
+
+                print("-----------------------")
+                print(self.board)
+                print("-----------------------")
             except Exception as e:
-                print(f"The given input:{player_input} is wrong, try gain.")
                 print(str(e))
+                print("-----------------------")
