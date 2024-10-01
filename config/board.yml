@@ -1,1 +1,2 @@
 n_cells: 9 # number of cells in a row/column
+n_win: 5 # number of cells to win
