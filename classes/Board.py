@@ -17,21 +17,24 @@ class Board:
 
         self.winner = None
         self.last_move = None
+        self.history = []
 
     def add_stone(self, stone: Stone):
         if not 0 <= stone.x < self.n or not 0 <= stone.y < self.n:
             raise ValueError(
-                f"The following {stone.x},{stone.y} coordinates are invalid."
+                f"The input should consist of x and y values between 0 and {self.n - 1},"
+                f" your input is ({stone.x},{stone.y})"
             )
 
         # put the stone to the board according to it's coordinate
         if self.board[stone.x][stone.y].player:
-            raise ValueError(
-                f"The following {stone.x},{stone.y} coordinates are in the board."
-            )
+            raise ValueError(f"The ({stone.x},{stone.y}) exists in the board.")
 
         self.board[stone.x][stone.y] = stone
+        self.last_move = stone
+        self.history.append(stone)
 
+    def toggle_player(self):
         toggle_flag = self.current_player.stone_color == self.player_black.stone_color
         self.current_player = self.player_white if toggle_flag else self.player_black
 
@@ -72,51 +75,80 @@ class Board:
 
     def check_diagwise_win_condition(self) -> bool:
 
-        # n_win is the number of stones of the same color to win
-        # check if there are {n_win} black or white stones in any direction of diagonals
+        # n_win is the number of stones of the same color in a row to win
+        # check if there are n_win black or white stones in a row in any direction of any diagonals
+
         for j in range(self.n):
 
-            # skip if there is less than n_win number of cells to check
+            # skip if there is less than n_win number of stones to check
             if self.n - j < self.n_win:
                 continue
 
             for i in range(self.n - self.n_win + 1):
 
-                w_diag1 = [self.board[k][k + i] for k in range(self.n_win)]
-                w_diag2 = [self.board[k][self.n - k - j - 1] for k in range(self.n_win)]
+                if i + j + self.n_win > self.n:
+                    continue
 
-                print(" ".join(str(i.x) + str(i.y) for i in w_diag1))
+                w_diag_right = [self.board[k + i][k + i + j] for k in range(self.n_win)]
+                w_diag_right_mirror = [
+                    self.board[k + i + j][k + i] for k in range(self.n_win)
+                ]
 
-                condition1 = self.check_sliding_win_condition(w_diag1)
-                condition2 = self.check_sliding_win_condition(w_diag2)
-                if condition1 or condition2:
+                # print(" ".join(str(i.x) + str(i.y) for i in w_diag_right))
+                # print(" ".join(str(i.x) + str(i.y) for i in w_diag_right_mirror))
+
+                condition_diag_right = self.check_sliding_win_condition(w_diag_right)
+                condition_diag_mirror_right = self.check_sliding_win_condition(
+                    w_diag_right_mirror
+                )
+
+                if condition_diag_right or condition_diag_mirror_right:
+                    return True
+
+                w_diag_left = [
+                    self.board[self.n - k - i - j - 1][k + i] for k in range(self.n_win)
+                ]
+                w_diag_left_mirror = [
+                    self.board[k + i][self.n - k - i - j - 1] for k in range(self.n_win)
+                ]
+
+                # print(" ".join(i.color for i in w_diag_left))
+                # print(" ".join(i.color for i in w_diag_left_mirror))
+
+                condition_diag_left = self.check_sliding_win_condition(w_diag_left)
+                condition_diag_mirror_left = self.check_sliding_win_condition(
+                    w_diag_left_mirror
+                )
+
+                if condition_diag_left or condition_diag_mirror_left:
                     return True
 
         return False
 
     def check_win_condition(self) -> bool:
-        # check any win condition for diagonals
-
         """
-        o x o o o o o o o
-        o o x o o b o o o
-        o o o x b o o o o
-        o o o b x o o o o
-        o o b o o x o o o
+        9x9
+        o x o o o o o o w
+        o o x o o b o o w
+        o o o x b o o o w
+        o o o b x o o o w
+        o o b o o x o o w
         o b o o o o o o o
         o o o o o o o o o
         o o o o o o o o o
         o o o o o o o o o
-
-        [(0,1),(1,2), (2,3), (3,4), (4,5)]
         """
 
-        # diag_status = self.check_diagonalwise_win_condition()
+        diag_status = self.check_diagwise_win_condition()
         row_status = self.check_rowwise_win_condition()
-        # col_status = self.check_colwise_win_condition()
+        col_status = self.check_colwise_win_condition()
 
-        # return diag_status and row_status and col_status
-        return row_status
+        win_condition = diag_status or row_status or col_status
+
+        if win_condition:
+            self.winner = self.current_player
+
+        return win_condition
 
     def __str__(self) -> str:
         return "\n".join(
