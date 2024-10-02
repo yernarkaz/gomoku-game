@@ -16,9 +16,8 @@ class Game:
                 config=config["player_config"], stone_color="W"
             )
 
-            self.board.current_player = (
-                self.board.player_black
-            )  # Player with black starts the game
+            # Player with black stone starts the game
+            self.board.current_player = self.board.player_black
         else:
             pass
 
@@ -29,13 +28,26 @@ class Game:
 
         while True:
             player_input = input(
-                f"Please enter x and y coordinates for player with {self.board.current_player.stone_color} color "
-                "stones in the form of <x><space><y>:\n"
+                f"Please enter x and y coordinates for player with {self.board.current_player.get_color_desc()}"
+                " stone in the form of <x><space><y>:\n"
             )
 
             try:
+                if len(player_input.strip()) == 0:
+                    raise ValueError("Empty input is invalid.")
+
                 parsed_input = player_input.split(" ")
-                x, y = int(parsed_input[0]), int(parsed_input[1])
+                if len(parsed_input) != 2:
+                    raise ValueError(
+                        f"The input should consist of x and y values between 0 and {self.board.n - 1}"
+                    )
+
+                try:
+                    x, y = int(parsed_input[0]), int(parsed_input[1])
+                except Exception:
+                    raise ValueError(
+                        f"The input should consist of x and y values between 0 and {self.board.n - 1}"
+                    )
 
                 new_stone = Stone(
                     x,
@@ -45,13 +57,14 @@ class Game:
                 )
                 self.board.add_stone(new_stone)
 
-                board_state = self.board.check_win_condition()
-
-                if board_state:
+                win_condition = self.board.check_win_condition()
+                if win_condition:
                     print(
-                        f"Player with {self.board.winner.stone_color} stones won the game."
+                        f"Player with {self.board.winner.get_color_desc()} stone color won the game."
                     )
                     exit()
+
+                self.board.toggle_player()
 
                 print("-----------------------")
                 print(self.board)

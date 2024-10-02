@@ -1,2 +1,2 @@
-n_cells: 9 # number of cells in a row/column
+n_cells: 9 # the size of the board
 n_win: 5 # number of cells to win

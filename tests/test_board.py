@@ -38,7 +38,7 @@ def random_scenario_board():
 def test_rowwise_win_condition1(random_scenario_board):
     board = Board(game_config["board_config"])
 
-    for j in range(5):
+    for j in range(board.n_win):
         random_scenario_board[0][j].color = "B"
 
     board.board = random_scenario_board
@@ -52,7 +52,7 @@ def test_rowwise_win_condition1(random_scenario_board):
 def test_rowwise_win_condition2(random_scenario_board):
     board = Board(game_config["board_config"])
 
-    for j in range(5):
+    for j in range(board.n_win):
         random_scenario_board[board.n - 1][board.n - j - 1].color = "B"
 
     board.board = random_scenario_board
@@ -85,7 +85,7 @@ def test_rowwise_win_condition3(random_scenario_board):
 def test_colwise_win_condition(random_scenario_board):
     board = Board(game_config["board_config"])
 
-    for i in range(5):
+    for i in range(board.n_win):
         random_scenario_board[i][0].color = "W"
 
     board.board = random_scenario_board
@@ -100,7 +100,7 @@ def test_colwise_win_condition(random_scenario_board):
 def test_colwise_win_condition2(random_scenario_board):
     board = Board(game_config["board_config"])
 
-    for i in range(5):
+    for i in range(board.n_win):
         random_scenario_board[board.n - i - 1][board.n - 1].color = "W"
 
     board.board = random_scenario_board
@@ -116,11 +116,11 @@ def test_colwise_win_condition3(random_scenario_board):
     board = Board(game_config["board_config"])
 
     j = random.randint(0, board.n - 1)
-    k = random.randint(0, board.n - 6)
+    k = random.randint(0, board.n - board.n_win - 1)
     colors = ["B", "W"]
     c = colors[random.randint(0, 1)]
 
-    for i in range(k, k + 5):
+    for i in range(k, k + board.n_win):
         random_scenario_board[i][j].color = c
 
     board.board = random_scenario_board
@@ -135,7 +135,7 @@ def test_colwise_win_condition3(random_scenario_board):
 def test_diagwise_win_condition1(random_scenario_board):
     board = Board(game_config["board_config"])
 
-    for i in range(5):
+    for i in range(board.n_win):
         random_scenario_board[i][i].color = "B"
 
     board.board = random_scenario_board
@@ -150,7 +150,7 @@ def test_diagwise_win_condition1(random_scenario_board):
 def test_diagwise_win_condition2(random_scenario_board):
     board = Board(game_config["board_config"])
 
-    for i in range(5):
+    for i in range(board.n_win):
         random_scenario_board[i][board.n - i - 1].color = "W"
 
     board.board = random_scenario_board
@@ -165,7 +165,7 @@ def test_diagwise_win_condition2(random_scenario_board):
 def test_diagwise_win_condition3(random_scenario_board):
     board = Board(game_config["board_config"])
 
-    for i in range(5):
+    for i in range(board.n_win):
         random_scenario_board[board.n - i - 1][board.n - i - 1].color = "W"
 
     board.board = random_scenario_board
@@ -180,7 +180,7 @@ def test_diagwise_win_condition3(random_scenario_board):
 def test_diagwise_win_condition4(random_scenario_board):
     board = Board(game_config["board_config"])
 
-    for i in range(5):
+    for i in range(board.n_win):
         random_scenario_board[board.n - i - 1][i].color = "W"
 
     board.board = random_scenario_board
@@ -195,12 +195,25 @@ def test_diagwise_win_condition4(random_scenario_board):
 def test_diagwise_win_condition5(random_scenario_board):
     board = Board(game_config["board_config"])
 
-    for i in range(5):
-        random_scenario_board[i][board.n - i - 1].color = "W"
+    direction = random.randint(0, 3)
+    k = random.randint(0, board.n - board.n_win - 1)
+    colors = ["B", "W"]
+    c = colors[random.randint(0, 1)]
+
+    for i in range(k, k + board.n_win):
+        if direction == 0:
+            random_scenario_board[i][i].color = c
+        elif direction == 1:
+            random_scenario_board[i][board.n - i - 1].color = c
+        elif direction == 2:
+            random_scenario_board[board.n - i - 1][i].color = "W"
+        else:
+            random_scenario_board[board.n - i - 1][board.n - i - 1].color = "W"
 
     board.board = random_scenario_board
 
     print("-----------------------")
+    print(f"color: {c}, k: {k}, direction: {direction}")
     print(board)
     print("-----------------------")
 
