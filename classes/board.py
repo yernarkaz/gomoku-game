@@ -6,6 +6,8 @@ class Board:
     def __init__(self, config: dict):
         self.n = config["n_cells"]
         self.n_win = config["n_win"]
+        self.left_stones = self.n
+
         self.board = [
             [Stone(x=x, y=y, color="_", player=None) for x in range(self.n)]
             for y in range(self.n)
@@ -19,13 +21,13 @@ class Board:
         self.last_move = None
         self.history = []
 
-    def add_stone(self, stone: Stone):
-        if not 0 <= stone.x < self.n or not 0 <= stone.y < self.n:
-            raise ValueError(
-                f"The input should consist of x and y values between 0 and {self.n - 1},"
-                f" your input is ({stone.x},{stone.y})"
-            )
+    def get_size(self):
+        return self.n
 
+    def get_board(self):
+        return self.board
+
+    def add_stone(self, stone: Stone):
         # put the stone to the board according to it's coordinate
         if self.board[stone.x][stone.y].player:
             raise ValueError(f"The ({stone.x},{stone.y}) exists in the board.")
@@ -33,6 +35,7 @@ class Board:
         self.board[stone.x][stone.y] = stone
         self.last_move = stone
         self.history.append(stone)
+        self.left_stones -= 1
 
     def toggle_player(self):
         toggle_flag = self.current_player.stone_color == self.player_black.stone_color
