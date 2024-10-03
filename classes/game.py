@@ -1,42 +1,45 @@
 from .board import Board
-from .player import Player
+from .player import Player, DumbPlayer
 from .stone import Stone
 
 
 class Game:
     def __init__(self, config: dict):
-        self.game_mode = config["game_mode"]  # switch game modes
+        self.game_modes = config["game_modes"]  # switch game modes
         self.board = Board(config["board_config"])
 
+    def setup(self, game_mode):
+        self.game_mode = game_mode
+        self.board.player_black = Player(stone_color="B")
+
         if self.game_mode == "hvh":
-            self.board.player_black = Player(
-                config=config["player_config"], stone_color="B"
-            )
-            self.board.player_white = Player(
-                config=config["player_config"], stone_color="W"
-            )
+            self.board.player_white = Player(stone_color="W")
 
-            # Player with black stone starts the game
-            self.board.current_player = self.board.player_black
-        else:
-            pass
+        elif self.game_mode == "hvd":
+            self.board.player_white = DumbPlayer(stone_color="W")
 
-    def run(self) -> None:
+        elif self.game_mode == "hvai":
+            self.board.player_white = None  # TODO AI/Smart player
+
+        # Player with black stone starts the game
+        self.board.current_player = self.board.player_black
+
+    def start(self):
         print("Game is started, enjoy!")
         print(f"Mode: {self.game_mode}")
         print("-----------------------")
 
         while True:
-            player_input = input(
+            xy_input = input(
                 f"Please enter x and y coordinates for player with {self.board.current_player.get_color_desc()}"
                 " stone in the form of <x><space><y>:\n"
             )
 
             try:
-                if len(player_input.strip()) == 0:
+                if len(xy_input.strip()) == 0:
                     raise ValueError("Empty input is invalid.")
 
-                parsed_input = player_input.split(" ")
+                parsed_input = xy_input.split(" ")
                 if len(parsed_input) != 2:
                     raise ValueError(
                         f"The input should consist of x and y values between 0 and {self.board.n - 1}"
@@ -72,3 +75,19 @@ class Game:
             except Exception as e:
                 print(str(e))
                 print("-----------------------")
+
+    def run(self) -> None:
+        print("Welcome to Gomoku game!")
+
+        game_modes_str = ", ".join(self.game_modes)
+
+        while True:
+            game_mode = input(f"Please type one of the game modes: {game_modes_str}:\n")
+
+            if game_mode not in self.game_modes:
+                print(f"The game mode {game_mode} is invalid. Type appropriate one.")
+            else:
+                break
+
+        self.setup(game_mode)
+        self.start()

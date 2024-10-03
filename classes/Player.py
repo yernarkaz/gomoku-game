@@ -1,6 +1,6 @@
 class Player:
 
-    def __init__(self, config: dict, stone_color: str):
+    def __init__(self, stone_color: str):
         self.stone_color = stone_color
 
     def get_color_desc(self):
@@ -10,3 +10,9 @@ class Player:
             return "black"
 
         return "undefined"
+
+
+class DumbPlayer(Player):
+
+    def __init__(self):
+        super(DumbPlayer, self)
