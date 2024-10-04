@@ -1,8 +1,8 @@
-from .board import Board
-from .player import Player, DumbPlayer
-from .stone import Stone
-
+import time
 from typing import Tuple
+
+from .board import Board
+from .player import DumbPlayer, Player
 
 
 class Game:
@@ -62,43 +62,36 @@ class Game:
 
         return x, y
 
-    def handle_turn(self, x: int, y: int) -> None:
-        new_stone = Stone(
-            x,
-            y,
-            self.board.current_player.stone_color,
-            self.board.current_player,
-        )
-        self.board.add_stone(new_stone)
+    def handle_turn(self, x: int, y: int) -> bool:
+        if not self.board.put_stone(x, y):
+            raise ValueError(f"The ({x},{y}) exists in the board.")
 
         win_condition = self.board.check_win_condition()
         if win_condition:
-            print(
-                f"Player with {self.board.winner.get_color_desc()}"
-                "stone color won the game."
-            )
-            exit()
+            return True
 
         self.board.toggle_player()
 
-    def start(self):
+        return False
+
+    def start(self) -> None:
         print("Game is started, enjoy!")
         print(f"Mode: {self.get_game_mode_desc()}")
         print("-----------------------")
 
         while True:
             try:
-                if self.board.left_stones == 0:
+                print(f"#{self.board.get_left_stones()} stones are left to put.")
+                if self.board.get_left_stones() == 0:
                     print("Draw, game is over.")
                     print("See you next time!")
                     exit()
 
-                print(type(self.board.current_player))
-
                 if type(self.board.current_player) is DumbPlayer:
                     line_input = self.board.current_player.get_input(
-                        self.board.get_board()
+                        self.board.get_unvisited_xy_pairs()
                     )
+                    print(f"dumb compute input: {line_input}")
                 elif type(self.board.current_player) is Player:
                     line_input = input(
                         f"Please enter x and y coordinates for player with"
@@ -110,7 +103,14 @@ class Game:
                     exit()
 
                 x, y = self.validate_input(line_input)
-                self.handle_turn(x, y)
+                win_condition = self.handle_turn(x, y)
+                if win_condition:
+                    print(
+                        f"Player with {self.board.winner.get_color_desc()}"
+                        "stone color won the game."
+                    )
+                    print(self.board)
+                    exit()
 
                 print("-----------------------")
                 print(self.board)

@@ -14,6 +14,7 @@ class Stone:
         self.y = y
         self.color = color
         self.player = player
+        self.visited = False
 
     def __str__(self) -> str:
         return f"{self.color}"
