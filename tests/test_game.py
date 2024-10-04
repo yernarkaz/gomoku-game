@@ -3,7 +3,6 @@ import os
 # import pytest
 import yaml
 from classes.game import Game
-from classes.board import Board
 from classes.player import DumbPlayer
 
 # import random
