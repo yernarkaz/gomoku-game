@@ -2,7 +2,8 @@ import random
 from typing import TYPE_CHECKING, List, Tuple
 
 if TYPE_CHECKING:
-    from .stone import Stone
+    from .board import Board
+    from .player import Player, SmartPlayer
 
 
 class Player:
@@ -29,38 +30,128 @@ class DumbPlayer(Player):
 
 
 class SmartPlayer(Player):
-    def __init__(self, stone_color: str):
+    def __init__(self, stone_color: str, opponent: "Player"):
         super().__init__(stone_color)
-        self.moves = []
+        self.opponent = opponent
 
-    def get_optimal_move(
+    def set_move(
         self,
-        smart_moves: List["Stone"],
-        opponent_moves: List["Stone"],
-        left_moves: List["Stone"],
-        n: int,
-        n_win: int,
-    ) -> Tuple[int, int]:
-        # Randomize the first move for the smart computer
-        if len(opponent_moves) == 1:
-            stone = random.choice(left_moves)
-            return stone.x, stone.y
+        i: int,
+        j: int,
+        board: "Board",
+    ) -> None:
+        board.get_board()[i][j].player = self
+        board.get_board()[i][j].color = self.stone_color
+        board.get_board()[i][j].visited = True
+
+    def unset_move(
+        self,
+        i: int,
+        j: int,
+        board: "Board",
+    ):
+        board.get_board()[i][j].player = None
+        board.get_board()[i][j].color = "_"
+        board.get_board()[i][j].visited = False
+
+    def is_unvisited_left(self, board: "Board") -> bool:
+        n = board.get_size()
+        for i in range(n):
+            for j in range(n):
+                if not board.is_visited(i, j):
+                    return True
+
+        return False
+
+    def evalute(self, board: "Board") -> int:
+        if board.check_rowwise_win_condition():
+            if type(board.current_player) is Player:
+                return 10
+            else:
+                return -10
+
+        if board.check_colwise_win_condition():
+            if type(board.current_player) is Player:
+                return 10
+            else:
+                return -10
+
+        if board.check_diagwise_win_condition():
+            if type(board.current_player) is Player:
+                return 10
+            else:
+                return -10
+
+        return 0
+
+    def minimax(self, board: "Board", depth: int, current_player: "Player") -> int:
+        score = self.evaluate(board)
+
+        if score != 0:
+            return score
+
+        if not self.is_unvisited_left(board):
+            return 0
+
+        n = board.get_size()
+
+        if type(current_player) is Player:
+            best_score = -1000
+
+            for i in range(n):
+                for j in range(n):
+                    if not board.is_visited(i, j):
+                        # set the move
+                        self.set_move(i, j, board)
+                        # recursively call the minimax function
+                        # to find the best move.
+                        best_score = max(
+                            best_score, self.minimax(board, depth + 1), self
+                        )
+                        # backtrack/undo the move
+                        self.unset_move(i, j, board)
+
+            return best_score
+        elif type(current_player) is SmartPlayer:
+            best_score = 1000
+
+            for i in range(n):
+                for j in range(n):
+                    if not board.is_visited(i, j):
+                        self.set_move(i, j, board)
+                        best_score = min(
+                            best_score, self.minimax(board, depth + 1, self.opponent)
+                        )
+                        self.unset_move(i, j, board)
+
+            return best_score
+
+    def find_optimal_move(self, board: "Board") -> Tuple[int, int]:
+        best_score = -10
+        n = board.get_size()
 
         for i in range(n):
             for j in range(n):
-                pass
-                # check if 2 stones in a row
-                # check if 3 stones in a row
-                # check if 4 stones in a row
+                if not board.is_visited(i, j):
+                    # set the player move
+                    self.set_move(i, j, board)
 
-        return 0, 0
+                    # evaluate the minimax function for the current move
+                    score = self.minimax(board, 0)
 
-    def get_input(
-        self, _board: List[List["Stone"]], last_move: "Stone", n_win: int
-    ) -> str:
+                    # backtrack/undo the player move
+                    self.unset_move(i, j, board)
+
+                    if score > best_score:
+                        best_score = score
+                        optimal_move = (i, j)
+
+        return optimal_move
+
+    def get_input(self, board: "Board", n_win: int) -> str:
         # TODO AI
-        # approach1: heuristics - Basics with backtracking
-        # approach2: Reinforcement learning
+        # approach1: Heuristics with minimax function and backtracking (Game tree)
+        # approach2: Reinforcement learning (not implemented)
 
         """
         _ _ _ _ _
@@ -69,21 +160,8 @@ class SmartPlayer(Player):
         _ B _ W _
         _ _ _ _ _
         """
-        opponent_moves = [
-            stone for row in _board for stone in row if type(stone.player) is Player
-        ]
 
-        smart_moves = [
-            stone
-            for row in _board
-            for stone in row
-            if type(stone.player) is SmartPlayer
-        ]
-
-        left_moves = [stone for row in _board for stone in row if not stone.visited]
-
-        x, y = self.get_optimal_move(
-            smart_moves, opponent_moves, left_moves, len(_board[0]), n_win
-        )
-
+        # pass the copy of board to the function
+        # to simulate the game tree and find the optimal move.
+        x, y = self.find_optimal_move(board.copy())
         return f"{x} {y}"
