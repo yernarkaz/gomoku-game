@@ -34,6 +34,9 @@ class Board:
     def set_board(self, _board: List[List[Stone]]):
         self._board = _board
 
+    def is_visited(self, x: int, y: int) -> bool:
+        return self._board[x][y].visited
+
     def put_stone(self, x: int, y: int) -> bool:
         # put the stone to the board according to it's coordinate
         print(x, y, self._board[x][y])
