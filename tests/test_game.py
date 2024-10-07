@@ -4,8 +4,6 @@ import yaml
 from classes.game import Game
 from classes.player import DumbPlayer, SmartPlayer
 
-# import random
-
 
 GAME_CONFIG_PATH = "../config/game.yml"
 
