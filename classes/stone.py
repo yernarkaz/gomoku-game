@@ -7,14 +7,15 @@ class Stone:
         self,
         x: int,
         y: int,
-        color: str,
-        player: Player,
+        color: str = "_",
+        player: Player = None,
+        visited: bool = False,
     ):
         self.x = x
         self.y = y
         self.color = color
         self.player = player
-        self.visited = False
+        self.visited = visited
 
     def __str__(self) -> str:
         return f"{self.color}"
