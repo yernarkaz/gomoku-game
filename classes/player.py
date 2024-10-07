@@ -1,4 +1,5 @@
 import random
+from copy import deepcopy
 from typing import TYPE_CHECKING, List, Tuple
 
 if TYPE_CHECKING:
@@ -34,13 +35,8 @@ class SmartPlayer(Player):
         super().__init__(stone_color)
         self.opponent = opponent
 
-    def set_move(
-        self,
-        i: int,
-        j: int,
-        board: "Board",
-    ) -> None:
-        board.get_board()[i][j].player = self
+    def set_move(self, i: int, j: int, board: "Board", player: "Player") -> None:
+        board.get_board()[i][j].player = player
         board.get_board()[i][j].color = self.stone_color
         board.get_board()[i][j].visited = True
 
@@ -63,7 +59,7 @@ class SmartPlayer(Player):
 
         return False
 
-    def evalute(self, board: "Board") -> int:
+    def evaluate(self, board: "Board") -> int:
         if board.check_rowwise_win_condition():
             if type(board.current_player) is Player:
                 return 10
@@ -95,18 +91,18 @@ class SmartPlayer(Player):
 
         n = board.get_size()
 
-        if type(current_player) is Player:
+        if type(current_player) in [Player, DumbPlayer]:
             best_score = -1000
 
             for i in range(n):
                 for j in range(n):
                     if not board.is_visited(i, j):
                         # set the move
-                        self.set_move(i, j, board)
+                        self.set_move(i, j, board, current_player)
                         # recursively call the minimax function
                         # to find the best move.
                         best_score = max(
-                            best_score, self.minimax(board, depth + 1), self
+                            best_score, self.minimax(board, depth + 1, self)
                         )
                         # backtrack/undo the move
                         self.unset_move(i, j, board)
@@ -118,7 +114,7 @@ class SmartPlayer(Player):
             for i in range(n):
                 for j in range(n):
                     if not board.is_visited(i, j):
-                        self.set_move(i, j, board)
+                        self.set_move(i, j, board, current_player)
                         best_score = min(
                             best_score, self.minimax(board, depth + 1, self.opponent)
                         )
@@ -126,7 +122,7 @@ class SmartPlayer(Player):
 
             return best_score
 
-    def find_optimal_move(self, board: "Board") -> Tuple[int, int]:
+    def find_optimal_input(self, board: "Board") -> Tuple[int, int]:
         best_score = -10
         n = board.get_size()
 
@@ -134,10 +130,10 @@ class SmartPlayer(Player):
             for j in range(n):
                 if not board.is_visited(i, j):
                     # set the player move
-                    self.set_move(i, j, board)
+                    self.set_move(i, j, board, self)
 
                     # evaluate the minimax function for the current move
-                    score = self.minimax(board, 0)
+                    score = self.minimax(board, 0, self)
 
                     # backtrack/undo the player move
                     self.unset_move(i, j, board)
@@ -148,20 +144,13 @@ class SmartPlayer(Player):
 
         return optimal_move
 
-    def get_input(self, board: "Board", n_win: int) -> str:
+    def get_input(self, board: "Board") -> str:
         # TODO AI
         # approach1: Heuristics with minimax function and backtracking (Game tree)
         # approach2: Reinforcement learning (not implemented)
 
-        """
-        _ _ _ _ _
-        _ _ _ _ _
-        _ _ B _ _
-        _ B _ W _
-        _ _ _ _ _
-        """
-
+        board_ai = deepcopy(board)
         # pass the copy of board to the function
         # to simulate the game tree and find the optimal move.
-        x, y = self.find_optimal_move(board.copy())
+        x, y = self.find_optimal_input(board_ai)
         return f"{x} {y}"
