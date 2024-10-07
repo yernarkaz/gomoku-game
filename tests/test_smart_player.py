@@ -120,7 +120,7 @@ def test_game_evaluate_whitewin(random_scenario_board):
     assert game.board.player_white.evaluate(game.board) == -10
 
 
-def test_game_minimax(random_scenario_board):
+def test_game_minimax_for_black(random_scenario_board):
     game = Game(game_config)
     game.board.player_black = Player(stone_color="B")
     game.board.player_white = SmartPlayer(
@@ -128,6 +128,35 @@ def test_game_minimax(random_scenario_board):
     )
     game.board.current_player = game.board.player_black
     game.board.set_board(random_scenario_board)
-    # print(game.board)
 
-    assert game.board.player_white.minimax(game.board, 0, game.board.player_white) == 10
+    assert (
+        game.board.player_white.minimax(game.board, 0, game.board.current_player) == 10
+    )
+
+
+def test_game_minimax_for_white(random_scenario_board):
+    game = Game(game_config)
+    game.board.player_black = Player(stone_color="B")
+    game.board.player_white = SmartPlayer(
+        stone_color="W", opponent=game.board.player_black
+    )
+    game.board.current_player = game.board.player_white
+    game.board.set_board(random_scenario_board)
+
+    assert (
+        game.board.player_white.minimax(game.board, 0, game.board.current_player) == -10
+    )
+
+
+def test_game_find_optimal_move(random_scenario_board):
+    game = Game(game_config)
+    game.board.player_black = Player(stone_color="B")
+    game.board.player_white = SmartPlayer(
+        stone_color="W", opponent=game.board.player_black
+    )
+    game.board.current_player = game.board.player_white
+    game.board.set_board(random_scenario_board)
+
+    smart_player_input = game.board.player_white.get_input(game.board)
+    x, y = game.validate_input(smart_player_input)
+    assert (x, y) == (0, 0)

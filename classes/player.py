@@ -59,19 +59,11 @@ class SmartPlayer(Player):
         return False
 
     def evaluate(self, board: "Board") -> int:
-        if board.check_rowwise_win_condition():
-            if type(board.current_player) is SmartPlayer:
-                return -10
-            else:
-                return 10
+        rowwise_win = board.check_rowwise_win_condition()
+        colwise_win = board.check_colwise_win_condition()
+        diagwise_win = board.check_diagwise_win_condition()
 
-        if board.check_colwise_win_condition():
-            if type(board.current_player) is SmartPlayer:
-                return -10
-            else:
-                return 10
-
-        if board.check_diagwise_win_condition():
+        if rowwise_win or colwise_win or diagwise_win:
             if type(board.current_player) is SmartPlayer:
                 return -10
             else:
@@ -88,12 +80,12 @@ class SmartPlayer(Player):
         beta=float("inf"),
     ) -> int:
         score = self.evaluate(board)
-        print(type(current_player))
-        print("depth: " + str(depth), "score: " + str(score))
-        print(alpha, beta)
-        print(board)
-        print("-------------")
-        print()
+        # print(type(current_player))
+        # print("depth: " + str(depth), "score: " + str(score))
+        # print(alpha, beta)
+        # print(board)
+        # print("-------------")
+        # print()
 
         if depth == 3:
             return score
@@ -106,7 +98,7 @@ class SmartPlayer(Player):
 
         n = board.get_size()
 
-        if isinstance(current_player, Player):
+        if type(current_player) is Player:
             best_score = -float("inf")
 
             for i in range(n):
@@ -127,7 +119,7 @@ class SmartPlayer(Player):
                             break
 
             return best_score
-        elif isinstance(current_player, SmartPlayer):
+        elif type(current_player) is SmartPlayer:
             best_score = float("inf")
 
             for i in range(n):
