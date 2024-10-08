@@ -87,7 +87,7 @@ class SmartPlayer(Player):
         # print("-------------")
         # print()
 
-        if depth == 3:
+        if depth == 2:
             return score
 
         if score != 0:

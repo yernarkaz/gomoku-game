@@ -1,7 +1,9 @@
 from typing import Tuple
 
 from .board import Board
-from .player import DumbPlayer, Player
+from .player import DumbPlayer, Player, SmartPlayer
+
+import time
 
 
 class Game:
@@ -20,7 +22,9 @@ class Game:
             self.board.player_white = DumbPlayer(stone_color="W")
 
         elif self.game_mode == "hvai":
-            self.board.player_white = None  # TODO AI/Smart player
+            self.board.player_white = SmartPlayer(
+                stone_color="W", opponent=self.board.player_black
+            )
 
         # Player with black stone starts the game
         self.board.current_player = self.board.player_black
@@ -90,12 +94,20 @@ class Game:
                     line_input = self.board.current_player.get_input(
                         self.board.get_unvisited_xy_pairs()
                     )
-                    print(f"dumb compute input: {line_input}")
+                    print(f"Dumb computer input: {line_input}")
                 elif type(self.board.current_player) is Player:
                     line_input = input(
                         f"Please enter x and y coordinates for player with"
                         f" {self.board.current_player.get_color_desc()}"
                         " stone in the form of <x><space><y>:\n"
+                    )
+                elif type(self.board.current_player) is SmartPlayer:
+                    print("Smart computer is thinking...")
+                    start_time = time.time()
+                    line_input = self.board.current_player.get_input(self.board)
+                    elapsed_time = time.time() - start_time
+                    print(
+                        f"Smart computer input: {line_input}, elpased time: {elapsed_time} seconds"
                     )
 
                 if line_input.lower() == "exit":
