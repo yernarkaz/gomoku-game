@@ -1,5 +1,6 @@
 from typing import List, Tuple
 
+from .player import Player
 from .stone import Stone
 
 
@@ -80,7 +81,7 @@ class Board:
             self.winner == self.current_player
             return True
 
-    def check_rowwise_win_condition(self) -> bool:
+    def check_rowwise_win_condition(self) -> Tuple[bool, Player]:
         # iterate each row.
         for i in range(self.get_size()):
             # iterate via sliding window with the number of n_win stones.
@@ -88,9 +89,9 @@ class Board:
                 w = self._board[i][j : j + self.get_nwin()]  # sliding window
                 condition = self.check_sliding_win_condition(w)
                 if condition:
-                    return True
+                    return True, w[0].player
 
-        return False
+        return False, None
 
     def check_colwise_win_condition(self) -> bool:
         # iterate each column.
@@ -100,9 +101,9 @@ class Board:
                 w = [self._board[i + k][j] for k in range(self.get_nwin())]
                 condition = self.check_sliding_win_condition(w)
                 if condition:
-                    return True
+                    return True, w[0].player
 
-        return False
+        return False, None
 
     def check_diagwise_win_condition(self) -> bool:
         # n_win is the number of stones of the same color in a row to win
@@ -129,8 +130,11 @@ class Board:
                     w_diag_right_mirror
                 )
 
-                if condition_diag_right or condition_diag_mirror_right:
-                    return True
+                if condition_diag_right:
+                    return True, w_diag_right[0].player
+
+                if condition_diag_mirror_right:
+                    return True, w_diag_right_mirror[0].player
 
                 w_diag_left = [
                     self._board[self.get_size() - k - i - j - 1][k + i]
@@ -146,10 +150,13 @@ class Board:
                     w_diag_left_mirror
                 )
 
-                if condition_diag_left or condition_diag_mirror_left:
-                    return True
+                if condition_diag_left:
+                    return True, w_diag_left[0].player
 
-        return False
+                if condition_diag_mirror_left:
+                    return True, w_diag_left_mirror[0].player
+
+        return False, None
 
     def check_win_condition(self) -> bool:
         """
@@ -165,16 +172,18 @@ class Board:
         o o o o o o o o o
         """
 
-        diag_status = self.check_diagwise_win_condition()
-        row_status = self.check_rowwise_win_condition()
-        col_status = self.check_colwise_win_condition()
+        diag_status, diag_winner = self.check_diagwise_win_condition()
+        row_status, row_winner = self.check_rowwise_win_condition()
+        col_status, col_winner = self.check_colwise_win_condition()
 
-        win_condition = diag_status or row_status or col_status
+        if diag_status:
+            self.winner = diag_winner
+        elif row_status:
+            self.winner = row_winner
+        elif col_status:
+            self.winner = col_winner
 
-        if win_condition:
-            self.winner = self.current_player
-
-        return win_condition
+        return diag_status or row_status or col_status
 
     def __str__(self) -> str:
         return "\n".join(
