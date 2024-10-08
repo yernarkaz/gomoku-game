@@ -1,3 +1,4 @@
+import math
 import random
 from copy import deepcopy
 from typing import TYPE_CHECKING, List, Tuple
@@ -58,16 +59,13 @@ class SmartPlayer(Player):
 
         return False
 
-    def evaluate(self, board: "Board") -> int:
-        rowwise_win = board.check_rowwise_win_condition()
-        colwise_win = board.check_colwise_win_condition()
-        diagwise_win = board.check_diagwise_win_condition()
-
-        if rowwise_win or colwise_win or diagwise_win:
-            if type(board.current_player) is SmartPlayer:
-                return -10
-            else:
+    def evaluate(self, board: "Board", depth: int) -> int:
+        if board.check_win_condition():
+            print(type(board.winner))
+            if type(board.winner) is SmartPlayer:
                 return 10
+            else:
+                return -10
 
         return 0
 
@@ -75,20 +73,14 @@ class SmartPlayer(Player):
         self,
         board: "Board",
         depth: int,
-        current_player: "Player",
-        alpha=-float("inf"),
-        beta=float("inf"),
+        target_depth: int,
+        is_maximizing: bool,
     ) -> int:
-        score = self.evaluate(board)
-        # print(type(current_player))
-        # print("depth: " + str(depth), "score: " + str(score))
-        # print(alpha, beta)
-        # print(board)
-        # print("-------------")
-        # print()
 
-        if depth == 2:
-            return score
+        score = self.evaluate(board, depth)
+
+        # if target_depth == depth:
+        #     return score
 
         if score != 0:
             return score
@@ -98,61 +90,66 @@ class SmartPlayer(Player):
 
         n = board.get_size()
 
-        if type(current_player) is Player:
+        if is_maximizing:
+            # Smart computer maximizes the score
             best_score = -float("inf")
 
             for i in range(n):
                 for j in range(n):
                     if not board.is_visited(i, j):
-                        # set the move
-                        self.set_move(i, j, board, current_player)
-                        # recursively call the minimax function
-                        # to find the best move.
-                        best_score = max(
-                            best_score,
-                            self.minimax(board, depth + 1, self, alpha, beta),
+
+                        self.set_move(i, j, board, self)
+
+                        score = self.minimax(
+                            board, depth + 1, target_depth, not is_maximizing
                         )
-                        # backtrack/undo the move
+                        best_score = max(best_score, score)
+
                         self.unset_move(i, j, board)
-                        alpha = max(alpha, best_score)
-                        if beta <= alpha:
-                            break
 
             return best_score
-        elif type(current_player) is SmartPlayer:
+        else:
+            # Player for black minimizes the score
             best_score = float("inf")
 
             for i in range(n):
                 for j in range(n):
                     if not board.is_visited(i, j):
-                        self.set_move(i, j, board, current_player)
-                        best_score = min(
-                            best_score,
-                            self.minimax(board, depth + 1, self.opponent, alpha, beta),
+                        self.set_move(i, j, board, self.opponent)
+                        score = self.minimax(
+                            board, depth + 1, target_depth, not is_maximizing
                         )
+                        best_score = min(best_score, score)
                         self.unset_move(i, j, board)
-                        beta = min(beta, best_score)
-                        if beta <= alpha:
-                            break
 
             return best_score
 
     def find_optimal_input(self, board: "Board") -> Tuple[int, int]:
-        best_score = float("inf")
+        best_score = -float("inf")
         n = board.get_size()
+        target_depth = int(math.log(n * n, 2))
 
         for i in range(n):
             for j in range(n):
                 if not board.is_visited(i, j):
-                    # set the player move
+
                     self.set_move(i, j, board, self)
-                    # evaluate the move
-                    move_score = self.minimax(board, 0, self.opponent)
-                    # undo the move
+
+                    score = self.minimax(board, 0, target_depth, True)
+
+                    print("-----------------")
+                    print("score", score, "i:", i, "j:", j)
+                    print(board)
+                    print()
+
                     self.unset_move(i, j, board)
-                    if move_score < best_score:
-                        best_score = move_score
+
+                    if score > best_score:
                         best_move = (i, j)
+                        best_score = score
+                        print(f"best score: {best_score}, best move: {best_move}")
+                        print(board)
+                        print()
 
         return best_move
 
