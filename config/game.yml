@@ -1,7 +1,5 @@
 config_paths:
   board_config: 'config/board.yml' # path to board configuration
-  player_config: 'config/player.yml' # path to player configuration
-  stone_config: 'config/stone.yml' # path to stone configuration
 
 game_modes: 
   - hvh # human vs human

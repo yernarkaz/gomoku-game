@@ -54,6 +54,20 @@ def random_scenario_board():
     return _board
 
 
+@pytest.fixture
+def empty_board():
+    n = board_config["n_cells"]
+
+    _board = []
+    for i in range(n):
+        _board.append([])
+        for j in range(n):
+            stone = Stone(x=i, y=j, color="_", visited=False)
+            _board[i].append(stone)
+
+    return _board
+
+
 def test_game_is_invisited_left():
     game = Game(game_config)
     game.board.player_black = Player(stone_color="B")
@@ -76,19 +90,7 @@ def test_game_isnot_invisited_left(random_full_board):
     assert not game.board.player_white.is_unvisited_left(game.board)
 
 
-def test_game_evaluate_draw(random_scenario_board):
-    game = Game(game_config)
-    game.board.player_black = Player(stone_color="B")
-    game.board.player_white = SmartPlayer(
-        stone_color="W", opponent=game.board.player_black
-    )
-    game.board.current_player = game.board.player_black
-    game.board.set_board(random_scenario_board)
-
-    assert game.board.player_white.evaluate(game.board) == 0
-
-
-def test_game_evaluate_blackwin(random_scenario_board):
+def test_game_evaluate_draw(empty_board):
     game = Game(game_config)
     game.board.player_black = Player(stone_color="B")
     game.board.player_white = SmartPlayer(
@@ -96,67 +98,150 @@ def test_game_evaluate_blackwin(random_scenario_board):
     )
     game.board.current_player = game.board.player_black
 
-    for j in range(game.board.get_nwin()):
-        random_scenario_board[0][j].color = "B"
+    black_player_inputs = [(0, 0), (1, 0), (2, 0), (3, 0)]
+    for x, y in black_player_inputs:
+        empty_board[x][y].color = "B"
+        empty_board[x][y].visited = True
+        empty_board[x][y].player = game.board.player_black
 
-    game.board.set_board(random_scenario_board)
+    white_player_inputs = [(0, 1), (1, 1), (1, 2), (3, 1)]
+    for x, y in white_player_inputs:
+        empty_board[x][y].color = "W"
+        empty_board[x][y].visited = True
+        empty_board[x][y].player = game.board.player_white
 
-    assert game.board.player_white.evaluate(game.board) == 10
+    game.board.set_board(empty_board)
 
-
-def test_game_evaluate_whitewin(random_scenario_board):
-    game = Game(game_config)
-    game.board.player_black = Player(stone_color="B")
-    game.board.player_white = SmartPlayer(
-        stone_color="W", opponent=game.board.player_black
-    )
-    game.board.current_player = game.board.player_white
-
-    for j in range(game.board.get_nwin()):
-        random_scenario_board[0][j].color = "W"
-
-    game.board.set_board(random_scenario_board)
-
-    assert game.board.player_white.evaluate(game.board) == -10
+    assert game.board.player_white.evaluate(game.board, 0) == 0
 
 
-def test_game_minimax_for_black(random_scenario_board):
+def test_game_evaluate_blackwin(empty_board):
     game = Game(game_config)
     game.board.player_black = Player(stone_color="B")
     game.board.player_white = SmartPlayer(
         stone_color="W", opponent=game.board.player_black
     )
     game.board.current_player = game.board.player_black
-    game.board.set_board(random_scenario_board)
 
-    assert (
-        game.board.player_white.minimax(game.board, 0, game.board.current_player) == 10
-    )
+    """
+    scenario for n = 9 and n_win = 5:
+    B W _ _ _ _ _ _ _
+    B W W _ _ _ _ _ _
+    B B _ _ _ _ _ _ _
+    B W _ _ _ _ _ _ _
+    B _ _ _ _ _ _ _ _
+    _ _ _ _ _ _ _ _ _
+    _ _ _ _ _ _ _ _ _
+    _ _ _ _ _ _ _ _ _
+    _ _ _ _ _ _ _ _ _
+    """
+    black_player_inputs = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0)]
+    for x, y in black_player_inputs:
+        empty_board[x][y].color = "B"
+        empty_board[x][y].visited = True
+        empty_board[x][y].player = game.board.player_black
+
+    white_player_inputs = [(0, 1), (1, 1), (1, 2), (3, 1)]
+    for x, y in white_player_inputs:
+        empty_board[x][y].color = "W"
+        empty_board[x][y].visited = True
+        empty_board[x][y].player = game.board.player_white
+
+    game.board.set_board(empty_board)
+
+    assert game.board.player_white.evaluate(game.board, 0) == -5
 
 
-def test_game_minimax_for_white(random_scenario_board):
+def test_game_evaluate_whitewin(empty_board):
     game = Game(game_config)
     game.board.player_black = Player(stone_color="B")
     game.board.player_white = SmartPlayer(
         stone_color="W", opponent=game.board.player_black
     )
     game.board.current_player = game.board.player_white
-    game.board.set_board(random_scenario_board)
 
-    assert (
-        game.board.player_white.minimax(game.board, 0, game.board.current_player) == -10
-    )
+    """
+    scenario for n = 9 and n_win = 5:
+    B W _ _ _ _ _ _ _
+    B W W _ _ _ _ _ _
+    B B B W _ _ _ _ _
+    W W B B W _ _ _ _
+    _ _ _ _ B W _ _ _
+    _ _ _ _ _ _ _ _ _
+    _ _ _ _ _ _ _ _ _
+    _ _ _ _ _ _ _ _ _
+    _ _ _ _ _ _ _ _ _
+    """
+    black_player_inputs = [
+        (0, 0),
+        (1, 0),
+        (2, 0),
+        (2, 1),
+        (2, 2),
+        (3, 2),
+        (3, 3),
+        (4, 4),
+    ]
+    for x, y in black_player_inputs:
+        empty_board[x][y].color = "B"
+        empty_board[x][y].visited = True
+        empty_board[x][y].player = game.board.player_black
+
+    white_player_inputs = [
+        (0, 1),
+        (0, 3),
+        (1, 1),
+        (1, 2),
+        (2, 3),
+        (3, 1),
+        (3, 4),
+        (4, 5),
+    ]
+    for x, y in white_player_inputs:
+        empty_board[x][y].color = "W"
+        empty_board[x][y].visited = True
+        empty_board[x][y].player = game.board.player_white
+
+    game.board.set_board(empty_board)
+
+    assert game.board.player_white.evaluate(game.board, 0) == 5
 
 
-def test_game_find_optimal_move(random_scenario_board):
+def test_game_find_optimal_move(empty_board):
     game = Game(game_config)
     game.board.player_black = Player(stone_color="B")
     game.board.player_white = SmartPlayer(
         stone_color="W", opponent=game.board.player_black
     )
     game.board.current_player = game.board.player_white
-    game.board.set_board(random_scenario_board)
+
+    """
+    scenario for n = 9 and n_win = 5:
+    B W _ _ _ _ _ _ _
+    B W W _ _ _ _ _ _
+    B B _ _ _ _ _ _ _
+    B W _ _ _ _ _ _ _
+    _ _ _ _ _ _ _ _ _
+    _ _ _ _ _ _ _ _ _
+    _ _ _ _ _ _ _ _ _
+    _ _ _ _ _ _ _ _ _
+    _ _ _ _ _ _ _ _ _
+    """
+
+    black_player_inputs = [(0, 0), (1, 0), (2, 0), (3, 0)]
+    for x, y in black_player_inputs:
+        empty_board[x][y].color = "B"
+        empty_board[x][y].visited = True
+        empty_board[x][y].player = game.board.player_black
+
+    white_player_inputs = [(0, 1), (1, 1), (1, 2), (3, 1)]
+    for x, y in white_player_inputs:
+        empty_board[x][y].color = "W"
+        empty_board[x][y].visited = True
+        empty_board[x][y].player = game.board.player_white
+
+    game.board.set_board(empty_board)
 
     smart_player_input = game.board.player_white.get_input(game.board)
     x, y = game.validate_input(smart_player_input)
-    assert (x, y) == (0, 0)
+    assert (x, y) == (4, 0)  # win condition for white player
