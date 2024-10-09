@@ -37,7 +37,7 @@ class SmartPlayer(Player):
 
     def set_move(self, i: int, j: int, board: "Board", player: "Player") -> None:
         board.get_board()[i][j].player = player
-        board.get_board()[i][j].color = self.stone_color
+        board.get_board()[i][j].color = player.stone_color
         board.get_board()[i][j].visited = True
 
     def unset_move(
@@ -61,11 +61,18 @@ class SmartPlayer(Player):
 
     def evaluate(self, board: "Board", depth: int) -> int:
         if board.check_win_condition():
-            print(type(board.winner))
+            # print(f"* winner at depth: {depth}")
+            # print(board)
+            # print()
+
             if type(board.winner) is SmartPlayer:
-                return 10
+                return 10 - depth
             else:
-                return -10
+                return -10 + depth
+        # else:
+        # print(f"* draw at depth: {depth}")
+        # print(board)
+        # print()
 
         return 0
 
@@ -75,14 +82,14 @@ class SmartPlayer(Player):
         depth: int,
         target_depth: int,
         is_maximizing: bool,
+        alpha: int = -float("inf"),
+        beta: int = float("inf"),
     ) -> int:
 
         score = self.evaluate(board, depth)
+        # print(f"minimax: {score}, {depth}, {is_maximizing}")
 
-        # if target_depth == depth:
-        #     return score
-
-        if score != 0:
+        if depth == target_depth or score != 0:
             return score
 
         if not self.is_unvisited_left(board):
@@ -92,24 +99,32 @@ class SmartPlayer(Player):
 
         if is_maximizing:
             # Smart computer maximizes the score
+            # print("smart computer maximizes the score")
             best_score = -float("inf")
 
             for i in range(n):
                 for j in range(n):
                     if not board.is_visited(i, j):
-
                         self.set_move(i, j, board, self)
-
                         score = self.minimax(
-                            board, depth + 1, target_depth, not is_maximizing
+                            board,
+                            depth + 1,
+                            target_depth,
+                            not is_maximizing,
+                            alpha,
+                            beta,
                         )
                         best_score = max(best_score, score)
-
                         self.unset_move(i, j, board)
+
+                        alpha = max(alpha, best_score)
+                        if beta <= alpha:
+                            break
 
             return best_score
         else:
             # Player for black minimizes the score
+            # print("player for black minimizes the score")
             best_score = float("inf")
 
             for i in range(n):
@@ -117,39 +132,41 @@ class SmartPlayer(Player):
                     if not board.is_visited(i, j):
                         self.set_move(i, j, board, self.opponent)
                         score = self.minimax(
-                            board, depth + 1, target_depth, not is_maximizing
+                            board,
+                            depth + 1,
+                            target_depth,
+                            not is_maximizing,
+                            alpha,
+                            beta,
                         )
                         best_score = min(best_score, score)
                         self.unset_move(i, j, board)
+
+                        beta = min(beta, best_score)
+                        if beta <= alpha:
+                            break
 
             return best_score
 
     def find_optimal_input(self, board: "Board") -> Tuple[int, int]:
         best_score = -float("inf")
         n = board.get_size()
-        target_depth = int(math.log(n * n, 2))
+        # target_depth = int(math.log(n, 2))
+        target_depth = 1
 
         for i in range(n):
             for j in range(n):
                 if not board.is_visited(i, j):
-
                     self.set_move(i, j, board, self)
-
-                    score = self.minimax(board, 0, target_depth, True)
-
-                    print("-----------------")
-                    print("score", score, "i:", i, "j:", j)
-                    print(board)
-                    print()
-
+                    score = self.minimax(board, 0, target_depth, False)
                     self.unset_move(i, j, board)
 
                     if score > best_score:
                         best_move = (i, j)
                         best_score = score
-                        print(f"best score: {best_score}, best move: {best_move}")
-                        print(board)
-                        print()
+                        # print(f"***best score: {best_score}, best move: {best_move}***")
+                        # print(board)
+                        # print()
 
         return best_move
 
