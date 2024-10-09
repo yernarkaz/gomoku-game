@@ -61,18 +61,10 @@ class SmartPlayer(Player):
 
     def evaluate(self, board: "Board", depth: int) -> int:
         if board.check_win_condition():
-            # print(f"* winner at depth: {depth}")
-            # print(board)
-            # print()
-
             if type(board.winner) is SmartPlayer:
-                return 10 - depth
+                return board.get_score_win() - depth
             else:
-                return -10 + depth
-        # else:
-        # print(f"* draw at depth: {depth}")
-        # print(board)
-        # print()
+                return board.get_score_loose() + depth
 
         return 0
 
@@ -87,7 +79,6 @@ class SmartPlayer(Player):
     ) -> int:
 
         score = self.evaluate(board, depth)
-        # print(f"minimax: {score}, {depth}, {is_maximizing}")
 
         if depth == target_depth or score != 0:
             return score
@@ -99,7 +90,6 @@ class SmartPlayer(Player):
 
         if is_maximizing:
             # Smart computer maximizes the score
-            # print("smart computer maximizes the score")
             best_score = -float("inf")
 
             for i in range(n):
@@ -124,7 +114,6 @@ class SmartPlayer(Player):
             return best_score
         else:
             # Player for black minimizes the score
-            # print("player for black minimizes the score")
             best_score = float("inf")
 
             for i in range(n):
@@ -151,8 +140,7 @@ class SmartPlayer(Player):
     def find_optimal_input(self, board: "Board") -> Tuple[int, int]:
         best_score = -float("inf")
         n = board.get_size()
-        # target_depth = int(math.log(n, 2))
-        target_depth = 1
+        target_depth = board.get_target_depth()
 
         for i in range(n):
             for j in range(n):
@@ -164,15 +152,13 @@ class SmartPlayer(Player):
                     if score > best_score:
                         best_move = (i, j)
                         best_score = score
-                        # print(f"***best score: {best_score}, best move: {best_move}***")
-                        # print(board)
-                        # print()
 
         return best_move
 
     def get_input(self, board: "Board") -> str:
-        # TODO AI
+        # 3 approaches to find the optimal move
         # approach1: Heuristics with minimax function and backtracking (Game tree)
+        # approach2: Monte Carlo Tree search (not implemented)
         # approach2: Reinforcement learning (not implemented)
 
         board_ai = deepcopy(board)
