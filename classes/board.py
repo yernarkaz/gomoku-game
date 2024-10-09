@@ -8,6 +8,9 @@ class Board:
     def __init__(self, config: dict):
         self._n = config["n_cells"]
         self._n_win = config["n_win"]
+        self._target_depth = config["heuristics_target_depth"]
+        self._score_win = config["heuristics_score_win"]
+        self._score_loose = config["heuristics_score_loose"]
         self._left_stones = self._n * self._n
 
         self._board = [
@@ -28,6 +31,15 @@ class Board:
 
     def get_nwin(self):
         return self._n_win
+
+    def get_target_depth(self):
+        return self._target_depth
+
+    def get_score_win(self):
+        return self._score_win
+
+    def get_score_loose(self):
+        return self._score_loose
 
     def get_board(self):
         return self._board

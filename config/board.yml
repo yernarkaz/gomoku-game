@@ -1,2 +1,5 @@
 n_cells: 9 # the size of the board
 n_win: 5 # number of cells to win
+heuristics_target_depth: 2 # the depth of the heuristics search
+heuristics_score_win: 5 # the score of winning
+heuristics_score_loose: -5 # the score of losing
