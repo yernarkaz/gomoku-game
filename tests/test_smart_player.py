@@ -85,7 +85,7 @@ def test_game_isnot_invisited_left(random_full_board):
         stone_color="W", opponent=game.board.player_black
     )
     game.board.current_player = game.board.player_black
-    game.board.set_board(random_full_board)
+    game.board.board = random_full_board
 
     assert not game.board.player_white.is_unvisited_left(game.board)
 
@@ -110,7 +110,7 @@ def test_game_evaluate_draw(empty_board):
         empty_board[x][y].visited = True
         empty_board[x][y].player = game.board.player_white
 
-    game.board.set_board(empty_board)
+    game.board.board = empty_board
 
     assert game.board.player_white.evaluate(game.board, 0) == 0
 
@@ -147,7 +147,7 @@ def test_game_evaluate_blackwin(empty_board):
         empty_board[x][y].visited = True
         empty_board[x][y].player = game.board.player_white
 
-    game.board.set_board(empty_board)
+    game.board.board = empty_board
 
     assert game.board.player_white.evaluate(game.board, 0) == -5
 
@@ -202,7 +202,7 @@ def test_game_evaluate_whitewin(empty_board):
         empty_board[x][y].visited = True
         empty_board[x][y].player = game.board.player_white
 
-    game.board.set_board(empty_board)
+    game.board.board = empty_board
 
     assert game.board.player_white.evaluate(game.board, 0) == 5
 
@@ -240,7 +240,7 @@ def test_game_find_optimal_move(empty_board):
         empty_board[x][y].visited = True
         empty_board[x][y].player = game.board.player_white
 
-    game.board.set_board(empty_board)
+    game.board.board = empty_board
 
     smart_player_input = game.board.player_white.get_input(game.board)
     x, y = game.validate_input(smart_player_input)
