@@ -1,4 +1,3 @@
-import math
 import random
 from copy import deepcopy
 from typing import TYPE_CHECKING, List, Tuple
@@ -7,38 +6,78 @@ if TYPE_CHECKING:
     from .board import Board
     from .player import Player, SmartPlayer
 
+# Constants
+WHITE = "W"
+BLACK = "B"
+UNDEFINED = "undefined"
+
 
 class Player:
+    """
+    Represents a player in the Gomoku game.
+
+    Attributes:
+        stone_color (str): The color of the player's stones.
+    """
+
     def __init__(self, stone_color: str):
+        if stone_color not in {WHITE, BLACK}:
+            raise ValueError(f"Invalid stone color: {stone_color}")
         self.stone_color = stone_color
 
     def get_color_desc(self) -> str:
-        if self.stone_color == "W":
-            return "white"
-        elif self.stone_color == "B":
-            return "black"
+        """
+        Returns a descriptive string for the player's stone color.
 
-        return "undefined"
+        Returns:
+            str: "white" if the stone color is white, "black" if black, otherwise "undefined".
+        """
+        if self.stone_color == WHITE:
+            return "white"
+        elif self.stone_color == BLACK:
+            return "black"
+        return UNDEFINED
 
 
 class DumbPlayer(Player):
+    """
+    Represents a dumb player who makes random moves.
+
+    Inherits from Player.
+    """
+
     def __init__(self, stone_color: str):
         super().__init__(stone_color)
 
     def get_input(self, unvisited_xy_pairs: List[Tuple[int, int]]) -> str:
+        """
+        Returns a random move from the list of unvisited coordinates.
+
+        Args:
+            unvisited_xy_pairs (List[Tuple[int, int]]): List of unvisited (x, y) coordinate pairs.
+
+        Returns:
+            str: A string representing the chosen move in the format "x y".
+        """
         x, y = random.choice(unvisited_xy_pairs)
         return f"{x} {y}"
 
 
 class SmartPlayer(Player):
+    """
+    Represents a smart player who makes strategic moves.
+
+    Inherits from Player.
+    """
+
     def __init__(self, stone_color: str, opponent: "Player"):
         super().__init__(stone_color)
         self.opponent = opponent
 
     def set_move(self, i: int, j: int, board: "Board", player: "Player") -> None:
-        board.get_board()[i][j].player = player
-        board.get_board()[i][j].color = player.stone_color
-        board.get_board()[i][j].visited = True
+        board.board[i][j].player = player
+        board.board[i][j].color = player.stone_color
+        board.board[i][j].visited = True
 
     def unset_move(
         self,
@@ -46,14 +85,13 @@ class SmartPlayer(Player):
         j: int,
         board: "Board",
     ):
-        board.get_board()[i][j].player = None
-        board.get_board()[i][j].color = "_"
-        board.get_board()[i][j].visited = False
+        board.board[i][j].player = None
+        board.board[i][j].color = "_"
+        board.board[i][j].visited = False
 
     def is_unvisited_left(self, board: "Board") -> bool:
-        n = board.get_size()
-        for i in range(n):
-            for j in range(n):
+        for i in range(board.size):
+            for j in range(board.size):
                 if not board.is_visited(i, j):
                     return True
 
@@ -62,9 +100,9 @@ class SmartPlayer(Player):
     def evaluate(self, board: "Board", depth: int) -> int:
         if board.check_win_condition():
             if type(board.winner) is SmartPlayer:
-                return board.get_score_win() - depth
+                return board.score_win - depth
             else:
-                return board.get_score_loose() + depth
+                return board.score_loose + depth
 
         return 0
 
@@ -86,14 +124,12 @@ class SmartPlayer(Player):
         if not self.is_unvisited_left(board):
             return 0
 
-        n = board.get_size()
-
         if is_maximizing:
             # Smart computer maximizes the score
             best_score = -float("inf")
 
-            for i in range(n):
-                for j in range(n):
+            for i in range(board.size):
+                for j in range(board.size):
                     if not board.is_visited(i, j):
                         self.set_move(i, j, board, self)
                         score = self.minimax(
@@ -116,8 +152,8 @@ class SmartPlayer(Player):
             # Player for black minimizes the score
             best_score = float("inf")
 
-            for i in range(n):
-                for j in range(n):
+            for i in range(board.size):
+                for j in range(board.size):
                     if not board.is_visited(i, j):
                         self.set_move(i, j, board, self.opponent)
                         score = self.minimax(
@@ -139,14 +175,12 @@ class SmartPlayer(Player):
 
     def find_optimal_input(self, board: "Board") -> Tuple[int, int]:
         best_score = -float("inf")
-        n = board.get_size()
-        target_depth = board.get_target_depth()
 
-        for i in range(n):
-            for j in range(n):
+        for i in range(board.size):
+            for j in range(board.size):
                 if not board.is_visited(i, j):
                     self.set_move(i, j, board, self)
-                    score = self.minimax(board, 0, target_depth, False)
+                    score = self.minimax(board, 0, board.target_depth, False)
                     self.unset_move(i, j, board)
 
                     if score > best_score:
