@@ -163,8 +163,9 @@ class Game:
             line_input = self.board.current_player.get_input(self.board)
             elapsed_time = time.time() - start_time
             print(
-                f"Smart computer input: {line_input}, elapsed time: {elapsed_time} seconds"
+                f"Smart computer input: {line_input}, elapsed time: {round(elapsed_time,1)} seconds"
             )
+            print("-----------------------")
         return line_input
 
     def main_game_loop(self):
@@ -192,6 +193,8 @@ class Game:
             try:
                 x, y = self.validate_input(line_input)
                 win_condition = self.handle_turn(x, y)
+                print(self.board)
+                print("-----------------------")
                 if win_condition:
                     print(
                         f"Player with {self.board.winner.get_color_desc()} stone color won the game."

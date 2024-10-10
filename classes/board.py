@@ -89,7 +89,6 @@ class Board:
             bool: True if the stone was successfully placed, False if the position was already occupied.
         """
         # put the stone to the board according to it's coordinate
-        print(x, y, self._board[x][y])
         if self._board[x][y].visited:
             return False
 
