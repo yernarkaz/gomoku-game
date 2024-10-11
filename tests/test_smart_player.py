@@ -112,7 +112,7 @@ def test_game_evaluate_draw(empty_board):
 
     game.board.board = empty_board
 
-    assert game.board.player_white.evaluate(game.board, 0) == 0
+    assert game.board.player_white.evaluate(game.board, 0, "basic") == 0
 
 
 def test_game_evaluate_blackwin(empty_board):
@@ -149,7 +149,7 @@ def test_game_evaluate_blackwin(empty_board):
 
     game.board.board = empty_board
 
-    assert game.board.player_white.evaluate(game.board, 0) == -5
+    assert game.board.player_white.evaluate(game.board, 0, "basic") == -5
 
 
 def test_game_evaluate_whitewin(empty_board):
@@ -204,7 +204,7 @@ def test_game_evaluate_whitewin(empty_board):
 
     game.board.board = empty_board
 
-    assert game.board.player_white.evaluate(game.board, 0) == 5
+    assert game.board.player_white.evaluate(game.board, 0, "basic") == 5
 
 
 def test_game_find_optimal_move(empty_board):

@@ -160,7 +160,9 @@ class Game:
         elif type(self.board.current_player) is SmartPlayer:
             print("Smart computer is thinking...")
             start_time = time.time()
-            line_input = self.board.current_player.get_input(self.board)
+            line_input = self.board.current_player.get_input(self.board, "advanced")
+            print(self.board.weighted_score)
+            print(self.board.pattern_score)
             elapsed_time = time.time() - start_time
             print(
                 f"Smart computer input: {line_input}, elapsed time: {round(elapsed_time,1)} seconds"
