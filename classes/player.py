@@ -156,7 +156,24 @@ class SmartPlayer(Player):
             return board.score_loose + depth
 
     def evaluate_advanced(self, board: "Board", depth: int) -> int:
-        return 0
+        """
+        Evaluates the board state using an advanced scoring method.
+
+        This method calculates the evaluation score by combining the board's
+        weighted score and pattern score, adjusted by the given depth. The
+        scores are weighted to provide a more nuanced evaluation.
+
+        Args:
+            board (Board): The current state of the game board.
+            depth (int): The depth to which the scores are adjusted.
+
+        Returns:
+            int: The evaluation score of the board.
+        """
+
+        weighted_score = board.weighted_score * (depth + 1)
+        pattern_score = board.pattern_score * (depth + 1)
+        return weighted_score + pattern_score
 
     def evaluate(self, board: "Board", depth: int, heuristics: str) -> int:
         """
@@ -173,11 +190,12 @@ class SmartPlayer(Player):
              Returns 0 if the game is not yet won or lost.
         """
 
-        if board.check_win_condition():
-            if heuristics == "basic":
-                score = self.evaluate_basic(board, depth)
-            elif heuristics == "advanced":
-                score = self.evaluate_advanced(board, depth)
+        if heuristics == "basic":
+            score = (
+                self.evaluate_basic(board, depth) if board.check_win_condition() else 0
+            )
+        elif heuristics == "advanced":
+            score = self.evaluate_advanced(board, depth)
         else:
             score = 0
 
@@ -224,6 +242,9 @@ class SmartPlayer(Player):
                 for j in range(board.size):
                     if not board.is_visited(i, j):
                         self.set_move(i, j, board, self)
+                        board.weighted_score += board.board_weights[i][j]
+                        board.pattern_score += board.get_pattern_count(i, j) * 10
+
                         score = self.minimax(
                             board,
                             depth + 1,
@@ -249,6 +270,9 @@ class SmartPlayer(Player):
                 for j in range(board.size):
                     if not board.is_visited(i, j):
                         self.set_move(i, j, board, self.opponent)
+                        board.weighted_score -= board.board_weights[i][j]
+                        board.pattern_score -= board.get_pattern_count(i, j) * 10
+
                         score = self.minimax(
                             board,
                             depth + 1,
