@@ -21,6 +21,11 @@ class Board:
             [Stone(x=x, y=y, color="_", player=None) for y in range(self._n)]
             for x in range(self._n)
         ]
+        self._board_weights = None
+        self.assign_board_weights()
+
+        self.weighted_score = 0
+        self.pattern_score = 0
 
         self.player_black = None
         self.player_white = None
@@ -63,6 +68,10 @@ class Board:
     def board(self, _board: List[List[Stone]]):
         """Sets the current state of the board."""
         self._board = _board
+
+    @property
+    def board_weights(self) -> List[List[Stone]]:
+        return self._board_weights
 
     def is_visited(self, x: int, y: int) -> bool:
         """
@@ -153,7 +162,10 @@ class Board:
 
         if all_black_stones or all_white_stones:
             self.winner == self.current_player
+
             return True
+
+        return False
 
     def check_rowwise_win_condition(self) -> Tuple[bool, Player]:
         """
@@ -304,6 +316,108 @@ class Board:
             self.winner = col_winner
 
         return diag_status or row_status or col_status
+
+    def assign_board_weights(self) -> None:
+        """
+        Assigns weights to the board positions based on their proximity to the center.
+
+        The weights are assigned in a symmetric pattern, with higher weights towards the center
+        of the board. The weight matrix is structured as follows for a 9x9 board:
+
+        The method initializes the board weights to 1 and then iteratively assigns
+        weights based on the distance from the center, increasing the weight as it moves
+        towards the center of the board.
+
+        The center position is given a special weight which is the sum of its immediate
+        horizontal neighbors.
+        """
+
+        """
+        [[1, 2, 3, 4, 4, 4, 3, 2, 1],
+         [2, 3, 4, 5, 5, 5, 4, 3, 2], 
+         [3, 4, 5, 6, 6, 6, 5, 4, 3], 
+         [4, 5, 6, 7, 7, 7, 6, 5, 4], 
+         [5, 6, 7, 8, 16, 8, 7, 6, 5], 
+         [4, 5, 6, 7, 7, 7, 6, 5, 4], 
+         [3, 4, 5, 6, 6, 6, 5, 4, 3], 
+         [2, 3, 4, 5, 5, 5, 4, 3, 2], 
+         [1, 2, 3, 4, 4, 4, 3, 2, 1]]
+        """
+
+        self._board_weights = [[0 for _ in range(self.size)] for _ in range(self.size)]
+        weight_i = 1
+        for i in range(self.size // 2 + 1):
+            weight_j = weight_i
+            for j in range(self.size // 2 + 1):
+                self._board_weights[i][j] = weight_j
+                self._board_weights[i][self.size - j - 1] = weight_j
+
+                self._board_weights[self.size - i - 1][j] = weight_j
+                self._board_weights[self.size - i - 1][self.size - j - 1] = weight_j
+                if j < self.size // 3:
+                    weight_j += 1
+
+            weight_i += 1
+
+        mid = self.size // 2
+        self._board_weights[mid][mid] = (
+            self._board_weights[mid][mid - 1] + self._board_weights[mid][mid + 1]
+        )
+
+    def get_pattern_count(self, x: int, y: int, is_maximizing: bool) -> int:
+        """
+        Counts the maximum number of consecutive stones of the current player in any direction
+        starting from the given position (x, y).
+
+        Args:
+            x (int): The x-coordinate of the starting position.
+            y (int): The y-coordinate of the starting position.
+            is_maximizing (bool): A flag indicating whether the current player is the maximizing player.
+
+        Returns:
+            int: The maximum number of consecutive stones of the current player in any direction.
+        """
+        directions = [
+            (1, 0),  # Horizontal right
+            (0, 1),  # Vertical down
+            (1, 1),  # Diagonal down-right
+            (1, -1),  # Diagonal down-left
+        ]
+
+        count = 0
+        player_color = (
+            self.current_player.stone_color
+            if is_maximizing
+            else ("B" if self.current_player.stone_color == "W" else "W")
+        )
+
+        for dx, dy in directions:
+            consecutive_count = 0
+            for step in range(1, self.nwin):
+                nx, ny = x + step * dx, y + step * dy
+                if (
+                    0 <= nx < self.size
+                    and 0 <= ny < self.size
+                    and self._board[nx][ny].color == player_color
+                ):
+                    consecutive_count += 1
+                else:
+                    break
+
+            for step in range(1, self.nwin):
+                nx, ny = x - step * dx, y - step * dy
+                if (
+                    0 <= nx < self.size
+                    and 0 <= ny < self.size
+                    and self._board[nx][ny].color == player_color
+                ):
+                    consecutive_count += 1
+                else:
+                    break
+
+            count = max(count, consecutive_count)
+
+        return count
 
     def __str__(self) -> str:
         return "\n".join(

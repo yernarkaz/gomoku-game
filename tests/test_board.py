@@ -217,3 +217,20 @@ def test_diagwise_win_condition5(random_scenario_board):
     print("-----------------------")
 
     assert board.check_diagwise_win_condition()
+
+
+def test_board_weights():
+    board = Board(game_config["board_config"])
+    weights = [
+        [1, 2, 3, 4, 4, 4, 3, 2, 1],
+        [2, 3, 4, 5, 5, 5, 4, 3, 2],
+        [3, 4, 5, 6, 6, 6, 5, 4, 3],
+        [4, 5, 6, 7, 7, 7, 6, 5, 4],
+        [5, 6, 7, 8, 16, 8, 7, 6, 5],
+        [4, 5, 6, 7, 7, 7, 6, 5, 4],
+        [3, 4, 5, 6, 6, 6, 5, 4, 3],
+        [2, 3, 4, 5, 5, 5, 4, 3, 2],
+        [1, 2, 3, 4, 4, 4, 3, 2, 1],
+    ]
+    board.assign_board_weights()
+    assert board._board_weights == weights

@@ -75,6 +75,19 @@ class SmartPlayer(Player):
         self.opponent = opponent
 
     def set_move(self, i: int, j: int, board: "Board", player: "Player") -> None:
+        """
+        Sets a move on the board for the given player.
+
+        Args:
+            i (int): The row index on the board.
+            j (int): The column index on the board.
+            board (Board): The game board where the move is to be set.
+            player (Player): The player making the move.
+
+        Returns:
+            None
+        """
+
         board.board[i][j].player = player
         board.board[i][j].color = player.stone_color
         board.board[i][j].visited = True
@@ -85,11 +98,36 @@ class SmartPlayer(Player):
         j: int,
         board: "Board",
     ):
+        """
+        Unsets a move on the board at the specified coordinates.
+
+        This method resets the cell at the given (i, j) coordinates on the board
+        to its initial state, indicating that no player has made a move there.
+
+        Args:
+            i (int): The row index of the cell to unset.
+            j (int): The column index of the cell to unset.
+            board (Board): The game board object containing the cell to unset.
+
+        Returns:
+            None
+        """
+
         board.board[i][j].player = None
         board.board[i][j].color = "_"
         board.board[i][j].visited = False
 
     def is_unvisited_left(self, board: "Board") -> bool:
+        """
+        Check if there are any unvisited cells left on the board.
+
+        Args:
+            board (Board): The game board to check.
+
+        Returns:
+            bool: True if there is at least one unvisited cell, False otherwise.
+        """
+
         for i in range(board.size):
             for j in range(board.size):
                 if not board.is_visited(i, j):
@@ -97,14 +135,71 @@ class SmartPlayer(Player):
 
         return False
 
-    def evaluate(self, board: "Board", depth: int) -> int:
-        if board.check_win_condition():
-            if type(board.winner) is SmartPlayer:
-                return board.score_win - depth
-            else:
-                return board.score_loose + depth
+    def evaluate_basic(self, board: "Board", depth: int) -> int:
+        """
+        Evaluate the board state with a basic heuristic.
 
-        return 0
+        This function evaluates the current state of the board and returns a score based on the depth of the game tree.
+        If the winner is a SmartPlayer, it returns a score indicating a win, adjusted by the depth. Otherwise, it returns
+        a score indicating a loss, also adjusted by the depth.
+
+        Args:
+            board (Board): The current state of the game board.
+            depth (int): The depth of the game tree at the current state.
+
+        Returns:
+            int: The evaluated score of the board state.
+        """
+        if type(board.winner) is SmartPlayer:
+            return board.score_win - depth
+        else:
+            return board.score_loose + depth
+
+    def evaluate_advanced(self, board: "Board", depth: int) -> int:
+        """
+        Evaluates the board state using an advanced scoring method.
+
+        This method calculates the evaluation score by combining the board's
+        weighted score and pattern score, adjusted by the given depth. The
+        scores are weighted to provide a more nuanced evaluation.
+
+        Args:
+            board (Board): The current state of the game board.
+            depth (int): The depth to which the scores are adjusted.
+
+        Returns:
+            int: The evaluation score of the board.
+        """
+
+        weighted_score = board.weighted_score * (depth + 1)
+        pattern_score = board.pattern_score * (depth + 1)
+        return weighted_score + pattern_score
+
+    def evaluate(self, board: "Board", depth: int, heuristics: str) -> int:
+        """
+        Evaluate the current state of the board and return a score based on the game outcome.
+
+        Args:
+            board (Board): The current game board.
+            depth (int): The depth of the game tree at the current state.
+
+        Returns:
+            int: A score representing the evaluation of the board state.
+             If the game is won by the SmartPlayer, returns a positive score adjusted by depth.
+             If the game is lost, returns a negative score adjusted by depth.
+             Returns 0 if the game is not yet won or lost.
+        """
+
+        if heuristics == "basic":
+            score = (
+                self.evaluate_basic(board, depth) if board.check_win_condition() else 0
+            )
+        elif heuristics == "advanced":
+            score = self.evaluate_advanced(board, depth)
+        else:
+            score = 0
+
+        return score
 
     def minimax(
         self,
@@ -112,11 +207,26 @@ class SmartPlayer(Player):
         depth: int,
         target_depth: int,
         is_maximizing: bool,
+        heuristics: str,
         alpha: int = -float("inf"),
         beta: int = float("inf"),
     ) -> int:
+        """
+        Perform the minimax algorithm with alpha-beta pruning to determine the best move.
 
-        score = self.evaluate(board, depth)
+        Args:
+            board (Board): The current state of the game board.
+            depth (int): The current depth in the game tree.
+            target_depth (int): The maximum depth to search in the game tree.
+            is_maximizing (bool): True if the current move is for the maximizing player, False otherwise.
+            alpha (int, optional): The best value that the maximizer currently can guarantee. Defaults to -float("inf").
+            beta (int, optional): The best value that the minimizer currently can guarantee. Defaults to float("inf").
+
+        Returns:
+            int: The evaluated score of the board for the current move.
+        """
+
+        score = self.evaluate(board, depth, heuristics)
 
         if depth == target_depth or score != 0:
             return score
@@ -132,11 +242,15 @@ class SmartPlayer(Player):
                 for j in range(board.size):
                     if not board.is_visited(i, j):
                         self.set_move(i, j, board, self)
+                        board.weighted_score += board.board_weights[i][j]
+                        board.pattern_score += board.get_pattern_count(i, j) * 10
+
                         score = self.minimax(
                             board,
                             depth + 1,
                             target_depth,
                             not is_maximizing,
+                            heuristics,
                             alpha,
                             beta,
                         )
@@ -156,11 +270,15 @@ class SmartPlayer(Player):
                 for j in range(board.size):
                     if not board.is_visited(i, j):
                         self.set_move(i, j, board, self.opponent)
+                        board.weighted_score -= board.board_weights[i][j]
+                        board.pattern_score -= board.get_pattern_count(i, j) * 10
+
                         score = self.minimax(
                             board,
                             depth + 1,
                             target_depth,
                             not is_maximizing,
+                            heuristics,
                             alpha,
                             beta,
                         )
@@ -173,14 +291,26 @@ class SmartPlayer(Player):
 
             return best_score
 
-    def find_optimal_input(self, board: "Board") -> Tuple[int, int]:
+    def find_optimal_input(self, board: "Board", heuristics: str) -> Tuple[int, int]:
+        """
+        Determines the optimal move for the player on the given board using the minimax algorithm.
+
+        Args:
+            board (Board): The current state of the game board.
+
+        Returns:
+            Tuple[int, int]: The coordinates of the optimal move as a tuple (row, column).
+        """
+
         best_score = -float("inf")
 
         for i in range(board.size):
             for j in range(board.size):
                 if not board.is_visited(i, j):
                     self.set_move(i, j, board, self)
-                    score = self.minimax(board, 0, board.target_depth, False)
+                    score = self.minimax(
+                        board, 0, board.target_depth, False, heuristics
+                    )
                     self.unset_move(i, j, board)
 
                     if score > best_score:
@@ -189,7 +319,23 @@ class SmartPlayer(Player):
 
         return best_move
 
-    def get_input(self, board: "Board") -> str:
+    def get_input(self, board: "Board", heuristics: str = "basic") -> str:
+        """
+        Determines the optimal move for the player based on the current state of the board.
+
+        This method uses a deep copy of the board to simulate the game tree and find the optimal move.
+        Currently, it supports the following approaches:
+        - Heuristics with minimax function and backtracking (Game tree)
+        - Monte Carlo Tree search (not implemented)
+        - Reinforcement learning (not implemented)
+
+        Args:
+            board (Board): The current state of the game board.
+
+        Returns:
+            str: The coordinates of the optimal move in the format "x y".
+        """
+
         # 3 approaches to find the optimal move
         # approach1: Heuristics with minimax function and backtracking (Game tree)
         # approach2: Monte Carlo Tree search (not implemented)
@@ -198,5 +344,5 @@ class SmartPlayer(Player):
         board_ai = deepcopy(board)
         # pass the copy of board to the function
         # to simulate the game tree and find the optimal move.
-        x, y = self.find_optimal_input(board_ai)
+        x, y = self.find_optimal_input(board_ai, heuristics)
         return f"{x} {y}"
